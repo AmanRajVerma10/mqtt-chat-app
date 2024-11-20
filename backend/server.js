@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authRoutes = require("./authRoutes");
+const userRoutes = require("./userRoutes");
 
 const app = express();
 app.use(cors());
@@ -18,6 +19,7 @@ mongoose
 
 // Use authentication routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
