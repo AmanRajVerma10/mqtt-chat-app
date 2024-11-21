@@ -5,7 +5,7 @@
 
 // export default function Chat() {
 //   const location = useLocation();
-//   const { username, currentUser } = location.state; // Passed via Link from Dashboard
+//   const { username, currentUser } = location.state; // Extract username and currentUser from location.state
 
 //   const [messages, setMessages] = useState([]); // Chat history
 //   const [message, setMessage] = useState("");
@@ -155,11 +155,12 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import mqtt from "mqtt";
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom"; // Import useHistory for navigation
 import axiosInstance from "../axiosConfig";
 
 export default function Chat() {
   const location = useLocation();
+  const history = useHistory(); // useHistory hook for navigation
   const { username, currentUser } = location.state; // Extract username and currentUser from location.state
 
   const [messages, setMessages] = useState([]); // Chat history
@@ -207,7 +208,7 @@ export default function Chat() {
       } else {
         setMessages((prevMessages) => [
           ...prevMessages,
-          { sender: username, text: payload.toString() },
+          { sender: topic.includes(currentUser) ? currentUser : username, text: payload.toString() },
         ]);
       }
     });
@@ -266,7 +267,15 @@ export default function Chat() {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">Chat with {username}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => history.push("/dashboard")} // Navigate back to the Dashboard
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+          >
+            Back
+          </button>
+          <h2 className="text-2xl font-bold">Chat with {username}</h2>
+        </div>
 
         <div className="border p-4 rounded-lg h-80 overflow-y-auto">
           {messages.map((msg, index) => (

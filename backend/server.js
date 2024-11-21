@@ -12,10 +12,7 @@ app.use(express.json()); // To parse JSON request bodies
 
 // Connect to MongoDB (replace with your MongoDB URI)
 mongoose
-  .connect(
-    "mongodb+srv://vermaaman464:XF2USCk6nbtIDa3n@cluster0.ayvzu.mongodb.net/chat_db?retryWrites=true&w=majority&appName=Cluster0",
-    { useNewUrlParser: true, useUnifiedTopology: true }
-  )
+  .connect(process.env.MONGO_DB_URI,{useNewUrlParser: true, useUnifiedTopology: true})
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
