@@ -1,19 +1,44 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { Link, useHistory } from "react-router-dom";
+import {jwtDecode} from "jwt-decode";
+import axiosInstance from "../axiosConfig";
 
 export default function Dashboard() {
-  const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc"); // 'asc' or 'desc'
-  const [error, setError] = useState("");
+  const history = useHistory();
+  const [users, setUsers] = useState([]); // List of registered users
+  const [searchTerm, setSearchTerm] = useState(""); // Search filter
+  const [sortOrder, setSortOrder] = useState("asc"); // Sort order
+  const [currentUser, setCurrentUser] = useState(""); // Logged-in user's username
+  const [error, setError] = useState(""); // Error messages
+
+  useEffect(() => {
+    // Decode the token and fetch logged-in user's details
+    const token = localStorage.getItem("token");
+    if (!token) {
+      history.push("/"); // Redirect to login if no token
+    } else {
+      const decodedToken = jwtDecode(token);
+      fetchCurrentUser(decodedToken.id); // Fetch user details using ID
+    }
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, [sortOrder]); // Fetch users when sortOrder changes
+  }, [sortOrder]); // Fetch users whenever sortOrder changes
+
+  const fetchCurrentUser = async (userId) => {
+    try {
+      const response = await axiosInstance.get(`/users/${userId}`); // Endpoint to get user details
+      setCurrentUser(response.data.username); // Store the username in state
+    } catch (error) {
+      console.error("Failed to fetch current user:", error);
+      setError("Failed to fetch logged-in user details");
+    }
+  };
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/users/users"); // Updated path
+      const response = await axiosInstance.get("/users");
       const sortedUsers = [...response.data].sort((a, b) => {
         return sortOrder === "asc"
           ? a.username.localeCompare(b.username)
@@ -33,10 +58,17 @@ export default function Dashboard() {
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    history.push("/");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-10">
+    <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-center">User Dashboard</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          Welcome, {currentUser || "User"}!
+        </h2>
 
         {error && <p className="text-red-500 text-center">{error}</p>}
 
@@ -56,17 +88,31 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <ul>
+        <ul className="border rounded-lg divide-y">
           {filteredUsers.map((user) => (
             <li
               key={user._id}
-              className="p-4 border-b last:border-none hover:bg-gray-100 cursor-pointer"
-              onClick={() => alert(`Chat with ${user.username} coming soon!`)} // Navigate to chat page later
+              className="p-4 hover:bg-gray-100 cursor-pointer"
             >
-              {user.username}
+              <Link
+                to={{
+                  pathname: "/chat",
+                  state: { username: user.username, currentUser },
+                }}
+                className="block text-blue-500 hover:underline"
+              >
+                {user.username}
+              </Link>
             </li>
           ))}
         </ul>
+
+        <button
+          onClick={handleLogout}
+          className="mt-6 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
       </div>
     </div>
   );

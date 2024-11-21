@@ -1,15 +1,27 @@
-// Add this route to `authRoutes.js` or a separate `userRoutes.js`
-const router = require('express').Router();
+const express = require('express');
 const User = require('./models/User');
+const authMiddleware = require('./authMiddleware');
 
-// Get all users
-router.get('/users', async (req, res) => {
+const router = express.Router();
+
+router.get('/', authMiddleware, async (req, res) => {
   try {
-    const users = await User.find().sort({ username: 1 }); // Sort alphabetically by default
+    const users = await User.find().sort({ username: 1 });
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
+router.get("/:id", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch user details" });
   }
 });
 
 module.exports = router;
+

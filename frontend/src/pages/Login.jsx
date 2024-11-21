@@ -11,8 +11,8 @@ export default function Login() {
   const onSubmit = async (data) => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', data);
-      localStorage.setItem('token', response.data.token); // Store token in localStorage
-      history.push('/dashboard'); // Redirect to a dashboard or chat page
+      localStorage.setItem('token', response.data.token); // Store JWT in localStorage
+      history.push('/dashboard'); // Redirect to dashboard
     } catch (error) {
       setErrorMessage(error.response?.data.message || 'An error occurred');
     }
