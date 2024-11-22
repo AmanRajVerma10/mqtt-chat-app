@@ -23,8 +23,11 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetchUsers();
-  }, [sortOrder]); // Fetch users whenever sortOrder changes
+    if (currentUser) {
+      // Fetch users only after currentUser is set
+      fetchUsers();
+    }
+  }, [currentUser, sortOrder]);
 
   const fetchCurrentUser = async (userId) => {
     try {
@@ -39,7 +42,10 @@ export default function Dashboard() {
   const fetchUsers = async () => {
     try {
       const response = await axiosInstance.get("/users");
-      const sortedUsers = [...response.data].sort((a, b) => {
+      const filteredUsers = response.data.filter(
+        (user) => user.username !== currentUser // Exclude the logged-in user
+      );
+      const sortedUsers = filteredUsers.sort((a, b) => {
         return sortOrder === "asc"
           ? a.username.localeCompare(b.username)
           : b.username.localeCompare(a.username);
